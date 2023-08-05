@@ -1,0 +1,9 @@
+// Import Bootstrap and its default variables
+@import 'customize-bootstrap.scss';
+@import '../node_modules/bootstrap/scss/bootstrap';
+
+.ping {
+	position: absolute;
+	left: 51.15%;
+	bottom: 44.5%
+}
