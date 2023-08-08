@@ -23,11 +23,20 @@ router.get('/:game', function (req, res) {
             `FROM locations\n` +
             `JOIN games on locations.game_id = games.id\n` +
             `WHERE games.url = \'${req.params.game}\'`
-        console.log(query)
         connection.execute(query, (err, result) => {
             connection.release();
             if (!err) {
-                return res.json(result.rows);
+                const locations = [];
+                for (const row of result.rows) {
+                    locations.push({
+                        name: row[0],
+                        x: row[1],
+                        y: row[2],
+                        z: row[3],
+                        isNamed: row[4]
+                    })
+                }
+                return res.json(locations);
             } else {
                 console.error('Error executing query:', err);
                 return res.sendStatus(500);
