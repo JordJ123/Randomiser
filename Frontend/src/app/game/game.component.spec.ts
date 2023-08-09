@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FortniteComponent } from './fortnite.component';
+import { GameComponent } from './game.component';
 
 describe('FortniteComponent', () => {
-  let component: FortniteComponent;
-  let fixture: ComponentFixture<FortniteComponent>;
+  let component: GameComponent;
+  let fixture: ComponentFixture<GameComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [FortniteComponent]
+      declarations: [GameComponent]
     });
-    fixture = TestBed.createComponent(FortniteComponent);
+    fixture = TestBed.createComponent(GameComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

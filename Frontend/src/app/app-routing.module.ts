@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { FortniteComponent } from './fortnite/fortnite.component';
+import { GameComponent } from './game/game.component';
 
 const routes: Routes = [
-	{ path: 'fortnite', component: FortniteComponent },
+	{ path: ':game', component: GameComponent },
 ];
 
 @NgModule({

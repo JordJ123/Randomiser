@@ -5,9 +5,10 @@ import {Observable} from 'rxjs';
 @Injectable({
 	providedIn: 'root'
 })
+
 export class DataService {
 	constructor(private http: HttpClient) {}
-	getFortniteData(): Observable<any> {
-		return this.http.get<any>("http://localhost:3000/fortnite");
+	getGameData(game: String): Observable<any> {
+		return this.http.get<any>(`http://localhost:3000/games/${game}`);
 	}
 }

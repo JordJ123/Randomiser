@@ -7,12 +7,12 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 
 import {AppComponent} from './app.component';
-import { FortniteComponent } from './fortnite/fortnite.component';
+import { GameComponent } from './game/game.component';
 
 @NgModule({
 	declarations: [
 		AppComponent,
-  		FortniteComponent
+  		GameComponent
 	],
 	imports: [
 		AppRoutingModule,

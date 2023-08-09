@@ -19,7 +19,7 @@ router.get('/:game', function (req, res) {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
         const query =
-            `SELECT locations.name, locations.x, locations.y, locations.z, locations.is_named\n` +
+            `SELECT games.title, locations.name, locations.x, locations.y, locations.z, locations.is_named\n` +
             `FROM locations\n` +
             `JOIN games on locations.game_id = games.id\n` +
             `WHERE games.url = \'${req.params.game}\'`
@@ -29,14 +29,17 @@ router.get('/:game', function (req, res) {
                 const locations = [];
                 for (const row of result.rows) {
                     locations.push({
-                        name: row[0],
-                        x: row[1],
-                        y: row[2],
-                        z: row[3],
-                        isNamed: row[4]
+                        name: row[1],
+                        x: row[2],
+                        y: row[4],
+                        z: row[5],
+                        isNamed: row[5]
                     })
                 }
-                return res.json(locations);
+                return res.json({
+                    'title': result.rows[0][0],
+                    'locations': locations
+                });
             } else {
                 console.error('Error executing query:', err);
                 return res.sendStatus(500);
