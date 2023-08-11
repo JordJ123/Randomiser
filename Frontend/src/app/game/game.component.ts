@@ -60,7 +60,7 @@ export class GameComponent implements OnInit {
 						this.unnamedLocationsLength = this.unnamedLocations.length;
 					}
 				}
-				this.mapSrc = `assets/maps/${gameURL}.jpg`;
+				this.mapSrc = `http://localhost:3000/images/maps/${gameURL}.jpg`;
 				this.hasCoordinates = this.locations[0].x != null;
 			},
 			error: (error) => {

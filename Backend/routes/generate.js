@@ -1,8 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const oracledb = require('oracledb');
-const {Error} = require("http-errors");
 const db = require('../db.js')
+const path = require("path");
+const fs = require("fs");
 const router = express.Router();
 
 /* GET ROUTES */
@@ -16,12 +17,13 @@ router.get('/fortnite', async function (req, res) {
         }
         await deleteLocations()
         await addLocations(gameId)
+        await addMap()
         return res.json("Success")
     } catch (error) {
         console.log(error)
         return res.sendStatus(500);
     } finally {
-        db.disconnect();
+        // db.disconnect();
     }
 });
 
@@ -71,6 +73,15 @@ async function addLocations(gameId) {
     });
     query += "SELECT * FROM DUAL"
     await db.query(query, names, "Can't add locations to database")
+}
+
+async function addMap() {
+    const response = await axios.get(
+        "https://fortnite-api.com/images/map_en.png",
+        { responseType: 'arraybuffer' });
+    const imagePath = path.join(__dirname, '..', 'public', 'images', 'maps',
+        'fortnite.jpg');
+    fs.writeFileSync(imagePath, response.data);
 }
 
 module.exports = router;
