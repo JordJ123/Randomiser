@@ -1,28 +1,36 @@
 const express = require('express');
-const db = require("../db.js");
+const {DatabaseConnection} = require("../db");
 const router = express.Router();
 
 /* GET ROUTES */
 router.get('/', async function(req, res) {
+    let db = new DatabaseConnection();
     try {
         await db.connect();
         const query =
-            'SELECT title\n' +
+            'SELECT title, url\n' +
             'FROM games\n' +
             'ORDER BY title ASC'
         const results = await db.query(query, {},
             "Can't get games data from database")
         let games = []
         for (const row of results.rows) {
-            games.push(row[0])
+            games.push({
+                'title': row[0],
+                'url': row[1]
+            })
         }
         return res.json(games)
     } catch (error) {
+        console.log(error)
+        return res.sendStatus(500);
+    } finally {
         db.disconnect();
     }
 });
 
 router.get('/:game', async function (req, res) {
+    let db = new DatabaseConnection();
     try {
         await db.connect();
         const query =

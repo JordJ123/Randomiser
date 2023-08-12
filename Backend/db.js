@@ -1,26 +1,29 @@
 const oracledb = require("oracledb");
 
-let connection = {};
+class DatabaseConnection {
 
-async function connect() {
-    connection = await oracledb.getConnection();
-}
+    constructor() {}
 
-async function query(querySQL, bind, errorMessage) {
-    try {
-        return await connection.execute(querySQL, bind, { autoCommit: true });
-    } catch (error) {
-        console.log(errorMessage + "\n" + querySQL + "\n" + error)
-        throw new Error();
+    async connect() {
+        this.connection = await oracledb.getConnection()
+    }
+
+    async query(querySQL, bind, errorMessage) {
+        try {
+            return await this.connection.execute(
+                querySQL, bind, { autoCommit: true });
+        } catch (error) {
+            console.log(errorMessage + "\n" + querySQL + "\n" + error)
+            throw new Error();
+        }
+    }
+
+    disconnect() {
+        this.connection.close();
     }
 }
 
-function disconnect() {
-    connection.release();
-}
 
 module.exports = {
-    connect,
-    query,
-    disconnect
+    DatabaseConnection
 };
