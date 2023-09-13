@@ -1,24 +1,61 @@
+require('../db.js');
+require('oracledb');
+
 const express = require('express');
 const axios = require('axios');
-const oracledb = require('oracledb');
-const db = require('../db.js')
 const path = require("path");
 const fs = require("fs");
+const {DatabaseConnection} = require("../db");
 const router = express.Router();
 
 /* GET ROUTES */
 router.get('/fortnite', async function (req, res) {
+    let db = new DatabaseConnection();
     try {
         await db.connect();
-        let gameId = await findGameId();
+        let gameId = await db.select("games", "id", "url", "\'fortnite\'");
         if (gameId === -1) {
-            await addGame();
-            gameId = await findGameId();
+            await db.insert("games", ["title", "url"],
+                ["\'Fortnite\'", "\'fortnite\'"])
+            gameId = await db.select("games", "id", "url", "\'fortnite\'");
         }
-        await deleteLocations()
-        await addLocations(gameId)
-        await addMap()
+        await db.delete("locations",
+            "WHERE locations.game_id in (\n" +
+            "   SELECT ID FROM games WHERE games.url = \'fortnite\')")
+        await addFortniteLocations(db, gameId)
+        await addFortniteMap(db)
         return res.json("Success")
+    } catch (error) {
+        console.log(error)
+        return res.sendStatus(500);
+    } finally {
+        db.disconnect();
+    }
+});
+
+router.get('/movies', async function (req, res) {
+    // let db = new DatabaseConnection();
+    try {
+        // await db.connect();
+        const directory = "../Database/Movies";
+        fs.readdir(directory, 'utf8', (err, files) => {
+            if (!err) {
+                files.forEach((file) => {
+                    const filePath = path.join(directory, file);
+                    console.log(file)
+                    fs.readFile(filePath, 'utf8', (err, data) => {
+                        if (!err) {
+                            console.log(data)
+                        } else {
+                            console.error('Error reading the file:', err);
+                        }
+                    })
+                });
+                return res.json("Success")
+            } else {
+                console.error('Error reading the directory:', err);
+            }
+        });
     } catch (error) {
         console.log(error)
         return res.sendStatus(500);
@@ -27,36 +64,9 @@ router.get('/fortnite', async function (req, res) {
     }
 });
 
-async function findGameId() {
-    const query = 'SELECT games.id FROM games WHERE games.url = \'fortnite\''
-    const results = await db.query(query, {}, "Can't find game id in database")
-    if (results.rows.length > 0) {
-        return results.rows[0][0]
-    } else {
-        return -1;
-    }
-}
-
-async function addGame() {
-    let query =
-        'INSERT ALL\n' +
-        'INTO games (title, url) VALUES (\'Fortnite\', \'fortnite\')\n' +
-        'SELECT 1 FROM DUAL'
-    await db.query(query, {}, "Can't add game to database")
-}
-
-async function deleteLocations() {
-    const query =
-        'DELETE\n' +
-        'FROM locations\n' +
-        'WHERE locations.game_id in (\n' +
-        '   SELECT ID FROM games WHERE games.url = \'fortnite\')'
-    await db.query(query, {}, "Can't delete locations from database")
-}
-
-async function addLocations(gameId) {
+async function addFortniteLocations(db, gameId) {
     const response = await axios.get("https://fortnite-api.com/v1/map");
-    let query = 'INSERT ALL\n'
+    let attributeValuesList = [];
     let names = {};
     response.data.data.pois.forEach(function (poi, index) {
         let isNamed;
@@ -65,17 +75,16 @@ async function addLocations(gameId) {
         } else {
             isNamed = 0;
         }
+        attributeValuesList.push([":"+index, poi.location.x, poi.location.y,
+            poi.location.z, isNamed, gameId])
         names[`${index}`] = poi.name
-        query +=
-            `INTO locations (name, x, y, z, is_named, game_id) VALUES ` +
-            `(:${index}, ${poi.location.x}, ${poi.location.y}, ` +
-            `${poi.location.z}, ${isNamed}, ${gameId})\n`
     });
-    query += "SELECT * FROM DUAL"
-    await db.query(query, names, "Can't add locations to database")
+    await db.insertAll("locations",
+        ["name", "x", "y", "z", "is_named", "game_id"],
+        attributeValuesList, names)
 }
 
-async function addMap() {
+async function addFortniteMap() {
     const response = await axios.get(
         "https://fortnite-api.com/images/map_en.png",
         { responseType: 'arraybuffer' });
