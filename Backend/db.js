@@ -90,8 +90,12 @@ class DatabaseConnection {
 
     async insert(table, attributes, attributeValues) {
         let statement = `INSERT ALL INTO ${table} (`
-        attributes.forEach((attribute) => {
-            statement += `${attribute}, `;
+        let uniqueAttributes = []
+        attributes.forEach((attribute, index) => {
+            statement += `${attribute.name}, `;
+            if (attribute.isUnique) {
+                uniqueAttributes.push(index)
+            }
         })
         statement = statement.substring(0, statement.length - 2) + ") VALUES ("
         attributeValues.forEach((attributeValue) => {
@@ -99,43 +103,48 @@ class DatabaseConnection {
         })
         statement = statement.substring(0, statement.length - 2)
             + ") SELECT 1 FROM DUAL";
+        if (uniqueAttributes.length > 0) {
+            statement += `\nWHERE NOT EXISTS (\nSELECT 1 FROM ${table}\nWHERE`;
+            uniqueAttributes.forEach((uniqueAttribute) => {
+                statement += `\n   ${attributes[uniqueAttribute].name} = ` +
+                    `${attributeValues[uniqueAttribute]}`
+            });
+            statement += "\n)"
+        }
         await this.query(statement, {}, `Can't add entity to ${table} table`)
     }
 
     async insertAll(table, attributes, attributeValuesList, bind) {
-        let statement = 'INSERT ALL\n'
-        let intoStatement = `INTO ${table} (`
-        let uniqueAttributes = []
-        attributes.forEach((attribute) => {
-            intoStatement += `${attribute.name}, `;
+        let isUniqueAttributes = false
+        attributes.every((attribute) => {
             if (attribute.isUnique) {
-                uniqueAttributes.push(attribute);
+                isUniqueAttributes = true;
+                return false
             }
+            return true
         })
-        intoStatement = intoStatement.substring(0, intoStatement.length - 2)
-            + ") VALUES ("
-        attributeValuesList.forEach((attributeValues) => {
-            statement += intoStatement;
-            attributeValues.forEach((attributeValue) => {
-                statement += `${attributeValue}, `;
+        if (isUniqueAttributes) {
+            for (const attributeValues of attributeValuesList) {
+                await this.insert(table, attributes, attributeValues)
+            }
+        } else {
+            let statement = 'INSERT ALL\n'
+            let intoStatement = `INTO ${table} (`
+            attributes.forEach((attribute) => {
+                intoStatement += `${attribute.name}, `;
             })
-            statement = statement.substring(0, statement.length - 2) + ")\n";
-        });
-        statement += "SELECT * FROM DUAL"
-        if (uniqueAttributes.length > 0) {
-            let isFirst = true;
+            intoStatement = intoStatement.substring(0, intoStatement.length - 2)
+                + ") VALUES ("
             attributeValuesList.forEach((attributeValues) => {
-                if (isFirst) {
-                    statement += "\nWHERE NOT EXISTS (SELECT 1 FROM movies " +
-                        `WHERE name = ${attributeValues[0]})`
-                    isFirst = false;
-                } else {
-                    statement += "\nAND NOT EXISTS (SELECT 1 FROM movies " +
-                        `WHERE name = ${attributeValues[0]})`
-                }
-            })
+                statement += intoStatement;
+                attributeValues.forEach((attributeValue) => {
+                    statement += `${attributeValue}, `;
+                })
+                statement = statement.substring(0, statement.length - 2) + ")\n";
+            });
+            statement += "SELECT * FROM DUAL"
+            await this.query(statement, bind, `Can't add entities to ${table}`)
         }
-        await this.query(statement, bind, `Can't add entities to ${table}`)
     }
 
     async select(table, selectAttribute, whereAttribute, whereValue) {

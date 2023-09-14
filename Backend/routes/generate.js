@@ -42,10 +42,12 @@ router.get('/movies', async function (req, res) {
             try {
                 await db.createTable("movies", attributes);
                 if (!err) {
-                    for (const movie of data.split(/\r?\n/)) {
-                        await db.insertAll("movies", attributes,
-                            [["'" + movie + "'"]], {})
-                    }
+                    let attributeValuesList = []
+                    data.split(/\r?\n/).forEach((movie) => {
+                        attributeValuesList.push(["'" + movie + "'"])
+                    })
+                    await db.insertAll("movies", attributes,
+                        attributeValuesList, {})
                 } else {
                     console.error('Error reading the file:', err);
                 }
@@ -77,9 +79,14 @@ async function addFortniteLocations(db, gameId) {
             poi.location.z, isNamed, gameId])
         names[`${index}`] = poi.name
     });
-    await db.insertAll("locations",
-        ["name", "x", "y", "z", "is_named", "game_id"],
-        attributeValuesList, names)
+    await db.insertAll("locations", [
+            new Attribute("name", "VARCHAR(255)", true, false),
+            new Attribute("x", "Number", false, false),
+            new Attribute("y", "Number", false, false),
+            new Attribute("z", "Number", false, false),
+            new Attribute("is_named", "Number", true, false),
+            new Attribute("game_id", "Number", true, false)
+        ], attributeValuesList, names)
 }
 
 async function addFortniteMap() {
