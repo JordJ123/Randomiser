@@ -5,7 +5,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require("path");
 const fs = require("fs");
-const {DatabaseConnection} = require("../db");
+const {DatabaseConnection, Attribute} = require("../db");
 const router = express.Router();
 
 /* GET ROUTES */
@@ -34,33 +34,31 @@ router.get('/fortnite', async function (req, res) {
 });
 
 router.get('/movies', async function (req, res) {
-    // let db = new DatabaseConnection();
+    const attributes = [new Attribute("name", "VARCHAR(255)", true, true)];
     try {
-        // await db.connect();
-        const directory = "../Database/Movies";
-        fs.readdir(directory, 'utf8', (err, files) => {
-            if (!err) {
-                files.forEach((file) => {
-                    const filePath = path.join(directory, file);
-                    console.log(file)
-                    fs.readFile(filePath, 'utf8', (err, data) => {
-                        if (!err) {
-                            console.log(data)
-                        } else {
-                            console.error('Error reading the file:', err);
-                        }
-                    })
-                });
+        fs.readFile("../Database/Data/Movies", 'utf8', async (err, data) => {
+            let db = new DatabaseConnection();
+            await db.connect();
+            try {
+                await db.createTable("movies", attributes);
+                if (!err) {
+                    for (const movie of data.split(/\r?\n/)) {
+                        await db.insertAll("movies", attributes,
+                            [["'" + movie + "'"]], {})
+                    }
+                } else {
+                    console.error('Error reading the file:', err);
+                }
                 return res.json("Success")
-            } else {
-                console.error('Error reading the directory:', err);
+            } catch (error) {
+                throw error;
+            } finally {
+                db.disconnect();
             }
         });
     } catch (error) {
         console.log(error)
         return res.sendStatus(500);
-    } finally {
-        // db.disconnect();
     }
 });
 
