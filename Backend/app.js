@@ -7,6 +7,7 @@ const logger = require('morgan');
 const cors = require('cors');
 const generateRouter = require('./routes/generate')
 const gamesRouter = require('./routes/games');
+const moviesRouter = require('./routes/movies');
 
 //App
 var app = express();
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generate', generateRouter)
 app.use('/games', gamesRouter);
+app.use('/movies', moviesRouter);
 app.use(function(req, res, next) {
   next(createError(404));
 });
