@@ -1,11 +1,12 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { GameComponent } from './game/game.component';
+import { RandomiserComponent } from './game/randomiser.component';
 import { HomeComponent } from "./home/home.component";
 
 const routes: Routes = [
 	{ path: '', component: HomeComponent },
-	{ path: ':game', component: GameComponent }
+	{ path: ':type', component: HomeComponent },
+	{ path: ':type/:subtype', component: RandomiserComponent }
 ];
 
 @NgModule({

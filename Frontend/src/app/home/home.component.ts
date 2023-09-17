@@ -1,6 +1,11 @@
-import {Component, ElementRef, OnInit, Renderer2} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {DataService} from "../data.service";
+
+const types = [
+	{'url': "games", 'title': "Games"},
+	{'url': "movies", 'title': "Movies"}
+];
 
 @Component({
   selector: 'app-home',
@@ -10,22 +15,32 @@ import {DataService} from "../data.service";
 
 export class HomeComponent implements OnInit {
 
-	constructor(private dataService: DataService) {}
-	games: any;
+	constructor(private activatedRoute: ActivatedRoute,
+				private dataService: DataService) {}
+	type: String = "";
+	options: any;
 
 	ngOnInit(): void {
+		let type = this.activatedRoute.snapshot.params['type'];
+		if (type) {
+			this.type = type;
+		}
 		this.getData();
 	}
 
 	getData(): void {
-		this.dataService.getGamesData().subscribe({
-			next: (data) => {
-				this.games = data
-			},
-			error: (error) => {
-				console.error('Error fetching data:', error);
-			}
-		});
+		if (this.type === "") {
+			this.options = types;
+		} else {
+			this.dataService.getTypeData(this.type).subscribe({
+				next: (data) => {
+					this.options = data
+				},
+				error: (error) => {
+					console.error('Error fetching data:', error);
+				}
+			});
+		}
 	}
 
 }

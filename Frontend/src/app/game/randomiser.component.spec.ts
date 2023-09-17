@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GameComponent } from './game.component';
+import { RandomiserComponent } from './randomiser.component';
 
 describe('FortniteComponent', () => {
-  let component: GameComponent;
-  let fixture: ComponentFixture<GameComponent>;
+  let component: RandomiserComponent;
+  let fixture: ComponentFixture<RandomiserComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GameComponent]
+      declarations: [RandomiserComponent]
     });
-    fixture = TestBed.createComponent(GameComponent);
+    fixture = TestBed.createComponent(RandomiserComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

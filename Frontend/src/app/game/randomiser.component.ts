@@ -7,11 +7,11 @@ const MAP_HEIGHT = 300000
 
 @Component({
   selector: 'app-game',
-  templateUrl: './game.component.html',
-  styleUrls: ['./game.component.css']
+  templateUrl: './randomiser.component.html',
+  styleUrls: ['./randomiser.component.css']
 })
 
-export class GameComponent implements OnInit {
+export class RandomiserComponent implements OnInit {
 
 	title = "";
 	constructor(private activatedRoute: ActivatedRoute,
@@ -31,7 +31,7 @@ export class GameComponent implements OnInit {
 	hasCoordinates = false;
 
 	ngOnInit(): void {
-		this.getData(this.activatedRoute.snapshot.params['game']);
+		this.getData();
 		const map = this.elementRef.nativeElement.querySelector('.map');
 		const mapStyle = getComputedStyle(map);
 		const mapWidth = parseFloat(mapStyle.width);
@@ -45,8 +45,10 @@ export class GameComponent implements OnInit {
 		this.map_bottom = MAP_HEIGHT * bottomPercentage;
 	}
 
-	getData(gameURL: String): void {
-		this.dataService.getGameData(gameURL).subscribe({
+	getData(): void {
+		const type = this.activatedRoute.snapshot.params['type'];
+		const subtype = this.activatedRoute.snapshot.params['subtype']
+		this.dataService.getSubTypeData(type, subtype).subscribe({
 			next: (data) => {
 				this.title = data.title;
 				this.locations = data.locations;
@@ -60,7 +62,7 @@ export class GameComponent implements OnInit {
 						this.unnamedLocationsLength = this.unnamedLocations.length;
 					}
 				}
-				this.mapSrc = `http://localhost:3000/images/maps/${gameURL}.jpg`;
+				this.mapSrc = `http://localhost:3000/images/maps/${subtype}.jpg`;
 				this.hasCoordinates = this.locations[0].x != null;
 			},
 			error: (error) => {

@@ -8,10 +8,11 @@ import {Observable} from 'rxjs';
 
 export class DataService {
 	constructor(private http: HttpClient) {}
-	getGamesData(): Observable<any> {
-		return this.http.get<any>(`http://localhost:3000/games`);
+	getTypeData(type: String): Observable<any> {
+		return this.http.get<any>(`http://localhost:3000/${type}`);
 	}
-	getGameData(game: String): Observable<any> {
-		return this.http.get<any>(`http://localhost:3000/games/${game}`);
+	getSubTypeData(type: String, subtype: String): Observable<any> {
+		return this.http.get<any>(
+			`http://localhost:3000/${type}/${subtype}`);
 	}
 }

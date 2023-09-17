@@ -7,14 +7,14 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 
 import {AppComponent} from './app.component';
-import { GameComponent } from './game/game.component';
+import { RandomiserComponent } from './game/randomiser.component';
 import { HomeComponent } from './home/home.component';
 
 @NgModule({
 	declarations: [
 		AppComponent,
-  		GameComponent,
-    HomeComponent
+  		RandomiserComponent,
+    	HomeComponent
 	],
 	imports: [
 		AppRoutingModule,
