@@ -8,9 +8,9 @@ router.get('/', async function(req, res) {
     try {
         await db.connect();
         const query =
-            'SELECT title, url\n' +
+            'SELECT name, url\n' +
             'FROM movie_categories\n' +
-            'ORDER BY title ASC'
+            'ORDER BY name ASC'
         const results = await db.query(query, {},
             "Can't get movie category data from the database")
         let movies = []
@@ -29,30 +29,29 @@ router.get('/', async function(req, res) {
     }
 });
 
-router.get('/:game', async function (req, res) {
+router.get('/:category', async function (req, res) {
     let db = new DatabaseConnection();
     try {
         await db.connect();
         const query =
-            `SELECT games.title, locations.name, locations.x, locations.y, locations.z, locations.is_named\n` +
-            `FROM locations\n` +
-            `JOIN games on locations.game_id = games.id\n` +
-            `WHERE games.url = \'${req.params.game}\'`
+            `SELECT movie_categories.name, movies.title\n` +
+            `FROM movies\n` +
+            `JOIN movie_movie_category on movie_movie_category.movie_id ` +
+                `= movies.id\n` +
+            `JOIN movie_categories on movie_movie_category.movie_category_id ` +
+                `= movie_categories.id\n` +
+            `WHERE movie_categories.url = \'${req.params.category}\'`
         const results = await db.query(query, {},
-            "Can't get location data from database")
-        const locations = [];
+            "Can't get movie data from database")
+        const movies = [];
         for (const row of results.rows) {
-            locations.push({
-                name: row[1],
-                x: row[2],
-                y: row[3],
-                z: row[4],
-                isNamed: row[5]
+            movies.push({
+                title: row[1],
             })
         }
         return res.json({
-            'title': results.rows[0][0],
-            'locations': locations
+            'name': results.rows[0][0],
+            'movies': movies
         });
     } catch (error) {
         console.log(error)

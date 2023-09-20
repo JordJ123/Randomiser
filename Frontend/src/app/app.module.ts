@@ -6,15 +6,16 @@ import {FormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 
-import {AppComponent} from './app.component';
-import { RandomiserComponent } from './game/randomiser.component';
+import {AppComponent} from './app/app.component';
+import { GamesComponent } from './randomiser/games/games.component';
 import { HomeComponent } from './home/home.component';
-
+import {MoviesComponent} from "./randomiser/movies/movies.component";
 @NgModule({
 	declarations: [
 		AppComponent,
-  		RandomiserComponent,
-    	HomeComponent
+  		GamesComponent,
+    	HomeComponent,
+     	MoviesComponent
 	],
 	imports: [
 		AppRoutingModule,

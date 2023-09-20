@@ -1,11 +1,7 @@
 <div class="m-3 p-0">
 	<div class="mb-3" *ngFor="let option of options">
-		<a href="http://localhost:4200/{{option.url}}" class="text-black"
-		   style="text-decoration: none;" *ngIf='type===""'>
-			{{ option.title }}
-		</a>
 		<a href="http://localhost:4200/{{type}}/{{option.url}}"
-		   class="text-black" style="text-decoration: none;" *ngIf='type!==""'>
+		   class="text-black" style="text-decoration: none;">
 			{{ option.title }}
 		</a>
 	</div>

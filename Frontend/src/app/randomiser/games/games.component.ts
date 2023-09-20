@@ -1,17 +1,17 @@
 import {Component, OnInit, ElementRef, Renderer2} from '@angular/core';
 import {ActivatedRoute} from '@angular/router'
-import {DataService} from '../data.service';
+import {DataService} from '../../data.service';
 
 const MAP_WIDTH = 300000
 const MAP_HEIGHT = 300000
 
 @Component({
-  selector: 'app-game',
-  templateUrl: './randomiser.component.html',
-  styleUrls: ['./randomiser.component.css']
+  selector: 'app-randomiser',
+  templateUrl: './games.component.html',
+  styleUrls: ['./games.component.css']
 })
 
-export class RandomiserComponent implements OnInit {
+export class GamesComponent implements OnInit {
 
 	title = "";
 	constructor(private activatedRoute: ActivatedRoute,
@@ -46,9 +46,8 @@ export class RandomiserComponent implements OnInit {
 	}
 
 	getData(): void {
-		const type = this.activatedRoute.snapshot.params['type'];
 		const subtype = this.activatedRoute.snapshot.params['subtype']
-		this.dataService.getSubTypeData(type, subtype).subscribe({
+		this.dataService.getSubTypeData("games", subtype).subscribe({
 			next: (data) => {
 				this.title = data.title;
 				this.locations = data.locations;
