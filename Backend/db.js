@@ -1,7 +1,8 @@
 const oracledb = require("oracledb");
-const axios = require("axios");
 
-class DatabaseConnection {
+const AND = " AND ";
+
+class OracleDatabase {
 
     constructor() {}
 
@@ -11,12 +12,15 @@ class DatabaseConnection {
 
     async query(querySQL, bind, errorMessage) {
         try {
-            console.log(querySQL)
-            console.log(bind)
-            return await this.connection.execute(
+            let results = await this.connection.execute(
                 querySQL, bind, { autoCommit: true });
+            console.log(querySQL);
+            console.log(bind);
+            return results;
         } catch (error) {
-            console.log(errorMessage + "\n" + error.message)
+            console.log('\x1b[31m' + querySQL)
+            console.log(bind)
+            console.log(errorMessage + "\n" + error.message + '\x1b[0m');
             throw new Error(error.message);
         } finally {
             console.log("")
@@ -54,7 +58,7 @@ class DatabaseConnection {
     }
 
     async _createSequence(name) {
-        let sequence = `CREATE SEQUENCE MOVIES_AUTOINCREMENT\n` +
+        let sequence = `CREATE SEQUENCE ${name}_autoincrement\n` +
             `START WITH 1\n` +
             `INCREMENT BY 1\n` +
             `NOCACHE\n` +
@@ -102,14 +106,14 @@ class DatabaseConnection {
             statement += `${attributeValue}, `;
         })
         statement = statement.substring(0, statement.length - 2)
-            + ") SELECT 1 FROM DUAL";
+            + ")\n SELECT 1 FROM DUAL";
         if (uniqueAttributes.length > 0) {
             statement += `\nWHERE NOT EXISTS (\nSELECT 1 FROM ${table}\nWHERE`;
             uniqueAttributes.forEach((uniqueAttribute) => {
                 statement += `\n   ${attributes[uniqueAttribute].name} = ` +
-                    `${attributeValues[uniqueAttribute]}`
+                    `${attributeValues[uniqueAttribute]} AND `
             });
-            statement += "\n)"
+            statement = statement.substring(0, statement.length - 5) + "\n)"
         }
         await this.query(statement, {}, `Can't add entity to ${table} table`)
     }
@@ -147,11 +151,13 @@ class DatabaseConnection {
         }
     }
 
-    async select(table, selectAttribute, whereAttribute, whereValue) {
-        const statement =
+    async select(table, selectAttribute, whereStatements) {
+        let statement =
             `SELECT ${table}.${selectAttribute}\n` +
-            `FROM ${table}\n` +
-            `WHERE ${table}.${whereAttribute} = ${whereValue}`
+            `FROM ${table}`;
+        if (whereStatements != null && whereStatements.length > 0) {
+            statement += "\n" + WhereStatement.toMultipleString(whereStatements);
+        }
         const results = await this.query(statement, {},
             `Can't find ${selectAttribute} in ${table} table`)
         if (results.rows.length > 0) {
@@ -175,6 +181,28 @@ class DatabaseConnection {
 
 }
 
+class WhereStatement {
+
+    constructor(attribute, value) {
+        this.attribute = attribute;
+        this.value = value;
+    }
+
+    static toMultipleString(whereStatements) {
+        let fullStatement = "WHERE ";
+        whereStatements.forEach((whereStatement) => {
+            fullStatement += whereStatement.toString().replace("WHERE ", "")
+                + AND;
+        })
+        return fullStatement.substring(0, fullStatement.length - AND.length);
+    }
+
+    toString() {
+        return `WHERE ${this.attribute.name} = ${this.value}`;
+    }
+
+}
+
 class Attribute {
     constructor(name, type, isNotNull, isUnique) {
         this.name = name;
@@ -185,6 +213,7 @@ class Attribute {
 }
 
 module.exports = {
-    DatabaseConnection,
+    OracleDatabase,
+    WhereStatement,
     Attribute
 };
