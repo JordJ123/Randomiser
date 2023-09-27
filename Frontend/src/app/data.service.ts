@@ -7,12 +7,25 @@ import {Observable} from 'rxjs';
 })
 
 export class DataService {
+
 	constructor(private http: HttpClient) {}
-	getTypeData(type: String): Observable<any> {
-		return this.http.get<any>(`http://localhost:3000/${type}`);
+
+	getCategoriesData(): Observable<any> {
+		return this.http.get<any>(`http://localhost:3000/categories`);
 	}
+
+	getCategoryData(category: String): Observable<any> {
+		return this.http.get<any>(
+			`http://localhost:3000/categories/${category}`);
+	}
+
+	getGamesData(): Observable<any> {
+		return this.http.get<any>(`http://localhost:3000/games`);
+	}
+
 	getSubTypeData(type: String, subtype: String): Observable<any> {
 		return this.http.get<any>(
 			`http://localhost:3000/${type}/${subtype}`);
 	}
+
 }

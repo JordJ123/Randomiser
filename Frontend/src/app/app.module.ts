@@ -9,13 +9,13 @@ import {NgModule} from '@angular/core';
 import {AppComponent} from './app/app.component';
 import { GamesComponent } from './randomiser/games/games.component';
 import { HomeComponent } from './home/home.component';
-import {MoviesComponent} from "./randomiser/movies/movies.component";
+import {MtvComponent} from "./randomiser/mtv/mtv.component";
 @NgModule({
 	declarations: [
 		AppComponent,
   		GamesComponent,
     	HomeComponent,
-     	MoviesComponent
+     	MtvComponent
 	],
 	imports: [
 		AppRoutingModule,

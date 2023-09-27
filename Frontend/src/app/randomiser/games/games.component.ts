@@ -31,7 +31,7 @@ export class GamesComponent implements OnInit {
 	hasCoordinates = false;
 
 	ngOnInit(): void {
-		this.getData();
+		this.retrieveData();
 		const map = this.elementRef.nativeElement.querySelector('.map');
 		const mapStyle = getComputedStyle(map);
 		const mapWidth = parseFloat(mapStyle.width);
@@ -45,9 +45,9 @@ export class GamesComponent implements OnInit {
 		this.map_bottom = MAP_HEIGHT * bottomPercentage;
 	}
 
-	getData(): void {
-		const subtype = this.activatedRoute.snapshot.params['subtype']
-		this.dataService.getSubTypeData("games", subtype).subscribe({
+	retrieveData(): void {
+		const game = this.activatedRoute.snapshot.params['game']
+		this.dataService.getSubTypeData("games", game).subscribe({
 			next: (data) => {
 				this.title = data.title;
 				this.locations = data.locations;
@@ -61,7 +61,7 @@ export class GamesComponent implements OnInit {
 						this.unnamedLocationsLength = this.unnamedLocations.length;
 					}
 				}
-				this.mapSrc = `http://localhost:3000/images/maps/${subtype}.jpg`;
+				this.mapSrc = `http://localhost:3000/images/maps/${game}.jpg`;
 				this.hasCoordinates = this.locations[0].x != null;
 			},
 			error: (error) => {

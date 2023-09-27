@@ -151,17 +151,24 @@ class OracleDatabase {
         }
     }
 
-    async select(table, selectAttribute, whereStatements) {
-        let statement =
-            `SELECT ${table}.${selectAttribute}\n` +
-            `FROM ${table}`;
+    async select(table, selectAttributes, whereStatements, orderByStatement) {
+        let statement = "SELECT ";
+        selectAttributes.forEach((value) => {
+            statement += `${table}.${value.name}, `
+        });
+        statement = statement.substring(0, statement.length - 2) +
+            `\nFROM ${table}`;
         if (whereStatements != null && whereStatements.length > 0) {
-            statement += "\n" + WhereStatement.toMultipleString(whereStatements);
+            statement += "\n" + WhereStatement.toMultipleString(
+                whereStatements);
+        }
+        if (orderByStatement != null) {
+            statement += "\n" + orderByStatement.toString();
         }
         const results = await this.query(statement, {},
-            `Can't find ${selectAttribute} in ${table} table`)
+            `Can't find attributes in ${table} table`)
         if (results.rows.length > 0) {
-            return results.rows[0][0]
+            return results.rows;
         } else {
             return -1;
         }
@@ -203,6 +210,25 @@ class WhereStatement {
 
 }
 
+class OrderByStatement {
+
+    constructor(attribute, isAscending) {
+        this.attribute = attribute;
+        this.isAscending = isAscending;
+    }
+
+    toString() {
+        let orderBy = "";
+        if (this.isAscending) {
+            orderBy = "ASC";
+        } else {
+            orderBy = "DESC";
+        }
+        return `ORDER BY ${this.attribute.name} ${orderBy}`;
+    }
+
+}
+
 class Attribute {
     constructor(name, type, isNotNull, isUnique) {
         this.name = name;
@@ -214,6 +240,7 @@ class Attribute {
 
 module.exports = {
     OracleDatabase,
+    OrderByStatement,
     WhereStatement,
     Attribute
 };

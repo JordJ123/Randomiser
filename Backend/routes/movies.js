@@ -1,64 +1,42 @@
 const express = require('express');
-const {DatabaseConnection} = require("../db");
+const {OracleDatabase} = require("../db");
 const router = express.Router();
 
 /* GET ROUTES */
-router.get('/', async function(req, res) {
-    let db = new DatabaseConnection();
+router.get('', async function (req, res) {
     try {
-        await db.connect();
-        const query =
-            'SELECT name, url\n' +
-            'FROM movie_categories\n' +
-            'ORDER BY name ASC'
-        const results = await db.query(query, {},
-            "Can't get movie category data from the database")
-        let movies = []
-        for (const row of results.rows) {
-            movies.push({
-                'title': row[0],
-                'url': row[1]
-            })
-        }
-        return res.json(movies)
+        return res.json(await getMovies(req.query['category']));
     } catch (error) {
         console.log(error)
         return res.sendStatus(500);
-    } finally {
-        db.disconnect();
     }
-});
+})
 
-router.get('/:category', async function (req, res) {
-    let db = new DatabaseConnection();
+async function getMovies(category) {
+    let db = new OracleDatabase();
     try {
         await db.connect();
         const query =
-            `SELECT movie_categories.name, movies.title\n` +
+            `SELECT movies.title\n` +
             `FROM movies\n` +
-            `JOIN movie_movie_category on movie_movie_category.movie_id ` +
-                `= movies.id\n` +
-            `JOIN movie_categories on movie_movie_category.movie_category_id ` +
-                `= movie_categories.id\n` +
-            `WHERE movie_categories.url = \'${req.params.category}\'`
+            `JOIN movie_category on movie_category.movie_id = movies.id\n` +
+            `JOIN categories on movie_category.category_id = categories.id\n` +
+            `WHERE categories.url = \'${category}\'`
         const results = await db.query(query, {},
             "Can't get movie data from database")
         const movies = [];
         for (const row of results.rows) {
             movies.push({
-                title: row[1],
+                title: row[0],
             })
         }
-        return res.json({
-            'name': results.rows[0][0],
-            'movies': movies
-        });
-    } catch (error) {
-        console.log(error)
-        return res.sendStatus(500);
+        return movies;
     } finally {
         db.disconnect();
     }
-})
+}
 
-module.exports = router;
+module.exports = {
+    router,
+    getMovies
+};

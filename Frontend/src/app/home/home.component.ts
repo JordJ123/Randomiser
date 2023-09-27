@@ -2,9 +2,9 @@ import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
 import {DataService} from "../data.service";
 
-const types = [
-	{'url': "games", 'title': "Games"},
-	{'url': "movies", 'title': "Movies"}
+const options = [
+	{'url': "games", 'name': "Games"},
+	{'url': "movies-and-tv-shows", 'name': "Movies & TV Shows"}
 ];
 
 @Component({
@@ -17,29 +17,43 @@ export class HomeComponent implements OnInit {
 
 	constructor(private activatedRoute: ActivatedRoute,
 				private dataService: DataService) {}
-	type: String = "";
+	currentOption: String = "";
 	options: any;
 
 	ngOnInit(): void {
-		let type = this.activatedRoute.snapshot.params['type'];
-		if (type) {
-			this.type = type;
+		let option = this.activatedRoute.snapshot.params['option'];
+		if (option) {
+			this.currentOption = option;
 		}
-		this.getData();
+		this.retrieveData();
 	}
 
-	getData(): void {
-		if (this.type === "") {
-			this.options = types;
+	retrieveData(): void {
+		if (this.currentOption === "") {
+			this.options = options;
 		} else {
-			this.dataService.getTypeData(this.type).subscribe({
-				next: (data) => {
-					this.options = data
-				},
-				error: (error) => {
-					console.error('Error fetching data:', error);
-				}
-			});
+			switch (this.currentOption) {
+				case "games":
+					this.dataService.getGamesData().subscribe({
+						next: (data) => {
+							this.options = data
+						},
+						error: (error) => {
+							console.error('Error fetching data:', error);
+						}
+					});
+					break;
+				case "movies-and-tv-shows":
+					this.dataService.getCategoriesData().subscribe({
+						next: (data) => {
+							this.options = data
+						},
+						error: (error) => {
+							console.error('Error fetching data:', error);
+						}
+					});
+					break;
+			}
 		}
 	}
 

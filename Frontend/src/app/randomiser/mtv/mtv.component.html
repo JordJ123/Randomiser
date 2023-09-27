@@ -6,7 +6,12 @@
 				<div>
 					<p class="text-nowrap">{{ name }}</p>
 					<p class="text-nowrap">
-						Name: {{ chosenMovie.title }}
+						Title: {{ chosenMovieTVShow.title }}
+					</p>
+					<p class="text-nowrap" *ngIf="isTVShow">
+						Episode: S{{ chosenMovieTVShow.season }}
+							E{{ chosenMovieTVShow.episode_number }}
+							- {{ chosenMovieTVShow.episode_name }}
 					</p>
 				</div>
 				<div class="d-flex flex-row gap-4 align-items-center">
