@@ -1,5 +1,5 @@
 <div class="container-fluid p-0 m-0 ">
-	<div class="row m-3 gap-4 p-0">
+	<div class="row m-3 gap-5 p-0">
 
 		<div class="col-lg p-0 m-0 ">
 			<div class="d-flex flex-column gap-4 p-0 m-0">
@@ -22,6 +22,16 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="col-lg p-0 m-0 ">
+			<h6>History</h6>
+			<p class="mb-1 text-nowrap" *ngFor="let mtv of history.toArray()">
+				{{ mtv.title }}
+				<span *ngIf="mtv.season">
+					[S{{ mtv.season }} E{{ mtv.episode_number }} - {{mtv.episode_name}}]
+				</span>
+			</p>
 		</div>
 
 	</div>
