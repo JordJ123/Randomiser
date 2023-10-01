@@ -25,8 +25,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //Routes
 app.use('/generate', generateRouter);
-app.use('/categories', categoriesRouter);
-app.use('/games', gamesRouter);
+app.use('/categories', categoriesRouter.router);
+app.use('/games', gamesRouter.router);
 app.use('/movies', moviesRouter.router);
 app.use('/tv_shows', tvShowsRouter.router);
 app.get('*', function(req, res) {

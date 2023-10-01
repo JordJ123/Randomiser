@@ -1,20 +1,28 @@
 const express = require('express');
-const {DatabaseConnection} = require("../db");
+const {OracleDatabase, Attribute, OrderByStatement} = require("../db");
 const router = express.Router();
 
-/* GET ROUTES */
-router.get('/', async function(req, res) {
-    let db = new DatabaseConnection();
+//CONSTANTS
+const GAME_ATTRIBUTES = new Map([
+    ['title', new Attribute("title", "VARCHAR(255)", true, true)],
+    ['url', new Attribute("url", "VARCHAR(255)", true, true)],
+]);
+
+/**
+ * Get Route - Base.
+ * Gets all games.
+ * @param {Request} req Request sent by client
+ * @param {Response} res Response to be sent
+ * @return {Object[]} All games
+ */
+router.get('', async function(req, res) {
+    let db = new OracleDatabase();
     try {
         await db.connect();
-        const query =
-            'SELECT title, url\n' +
-            'FROM games\n' +
-            'ORDER BY title ASC'
-        const results = await db.query(query, {},
-            "Can't get games data from database")
+        const results = await db.select("games", GAME_ATTRIBUTES, null,
+            new OrderByStatement(GAME_ATTRIBUTES.get('title'), true))
         let games = []
-        for (const row of results.rows) {
+        for (const row of results) {
             games.push({
                 'title': row[0],
                 'url': row[1]
@@ -29,12 +37,20 @@ router.get('/', async function(req, res) {
     }
 });
 
+/**
+ * Get Route - /{game}.
+ * Gets details for the request game.
+ * @param {Request} req Request sent by client
+ * @param {Response} res Response to be sent
+ * @return {Object} Requested game details
+ */
 router.get('/:game', async function (req, res) {
-    let db = new DatabaseConnection();
+    let db = new OracleDatabase();
     try {
         await db.connect();
         const query =
-            `SELECT games.title, locations.name, locations.x, locations.y, locations.z, locations.is_named\n` +
+            `SELECT games.title, locations.name, locations.x, locations.y, ` +
+                `locations.z, locations.is_named\n` +
             `FROM locations\n` +
             `JOIN games on locations.game_id = games.id\n` +
             `WHERE games.url = \'${req.params.game}\'`
@@ -62,4 +78,7 @@ router.get('/:game', async function (req, res) {
     }
 })
 
-module.exports = router;
+module.exports = {
+    router,
+    GAME_ATTRIBUTES
+};

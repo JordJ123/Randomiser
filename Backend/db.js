@@ -95,7 +95,8 @@ class OracleDatabase {
     async insert(table, attributes, attributeValues) {
         let statement = `INSERT ALL INTO ${table} (`
         let uniqueAttributes = []
-        attributes.forEach((attribute, index) => {
+        let attributesArray = Array.from(attributes.values())
+        attributesArray.forEach((attribute, index) => {
             statement += `${attribute.name}, `;
             if (attribute.isUnique) {
                 uniqueAttributes.push(index)
@@ -110,8 +111,8 @@ class OracleDatabase {
         if (uniqueAttributes.length > 0) {
             statement += `\nWHERE NOT EXISTS (\nSELECT 1 FROM ${table}\nWHERE`;
             uniqueAttributes.forEach((uniqueAttribute) => {
-                statement += `\n   ${attributes[uniqueAttribute].name} = ` +
-                    `${attributeValues[uniqueAttribute]} AND `
+                statement += `\n   ${attributesArray[uniqueAttribute].name} ` +
+                    `= ${attributeValues[uniqueAttribute]} AND `
             });
             statement = statement.substring(0, statement.length - 5) + "\n)"
         }
@@ -120,7 +121,7 @@ class OracleDatabase {
 
     async insertAll(table, attributes, attributeValuesList, bind) {
         let isUniqueAttributes = false
-        attributes.every((attribute) => {
+        Array.from(attributes.values()).every((attribute) => {
             if (attribute.isUnique) {
                 isUniqueAttributes = true;
                 return false

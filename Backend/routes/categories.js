@@ -15,7 +15,7 @@ const CATEGORY_ATTRIBUTES = new Map([
  * Gets all the categories.
  * @param {Request} req Request sent by client
  * @param {Response} res Response to be sent
- * @return All categories
+ * @return {Object[]} All categories
  */
 router.get('', async function(req, res) {
     try {
@@ -44,10 +44,10 @@ router.get('', async function(req, res) {
 
 /**
  * Get Route - /{category}.
- * Gets the details of the related.
+ * Gets the details of the request category.
  * @param {Request} req Request sent by client
  * @param {Response} res Response to be sent
- * @return {Object} Related category details
+ * @return {Object} Requested category details
  */
 router.get('/:category', async function(req, res) {
     let category = req.params['category'];
@@ -73,4 +73,7 @@ router.get('/:category', async function(req, res) {
     }
 })
 
-module.exports = router;
+module.exports = {
+    router,
+    CATEGORY_ATTRIBUTES
+};

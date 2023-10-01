@@ -1,4 +1,3 @@
-//IMPORTS
 require('../db.js');
 require('oracledb');
 const express = require('express');
@@ -6,20 +5,14 @@ const axios = require('axios');
 const path = require("path");
 const fs = require("fs");
 const {OracleDatabase, Attribute, WhereStatement} = require("../db");
+const {GAME_ATTRIBUTES} = require("./games");
+const {CATEGORY_ATTRIBUTES} = require("./categories");
+const {MOVIE_ATTRIBUTES} = require("./movies");
+const {TV_SHOW_ATTRIBUTES} = require("./tv_shows");
 const router = express.Router();
 
 //CONSTANTS
-const categoryAttributes = [
-    new Attribute("name", "VARCHAR(255)", true, true),
-    new Attribute("url", "VARCHAR(255)", true, true)
-];
-const movieAttributes = [new Attribute("title", "VARCHAR(255)", true, true)];
-const tvShowAttributes = [
-    new Attribute("title", "VARCHAR(255)", true, false),
-    new Attribute("season", "NUMBER", true, false),
-    new Attribute("episode_number", "NUMBER", true, false),
-    new Attribute("episode_name", "VARCHAR(255)", true, false),
-];
+const idAttribute = new Attribute("id", "NUMBER", true, true);
 const movieCategoryAttributes = [
     new Attribute("movie_id", "NUMBER", true, true),
     new Attribute("category_id", "NUMBER", true, true)
@@ -29,16 +22,22 @@ const tvShowCategoryAttributes = [
     new Attribute("category_id", "NUMBER", true, true)
 ]
 
-//GET ROUTES
-router.get('/fortnite', async function (req, res) {
+/**
+ * Get Route - /games/fortnite
+ * Generates data for fortnite.
+ * @param {Request} req Request sent by client
+ * @param {Response} res Response to be sent
+ * @return {String} Status message
+ */
+router.get('/games/fortnite', async function (req, res) {
     let db = new OracleDatabase();
     try {
         await db.connect();
-        let gameId = await db.select("games", "id", "url", "\'fortnite\'");
+        let gameId = await getFortniteId(db);
         if (gameId === -1) {
-            await db.insert("games", ["title", "url"],
+            await db.insert("games", GAME_ATTRIBUTES,
                 ["\'Fortnite\'", "\'fortnite\'"])
-            gameId = await db.select("games", "id", "url", "\'fortnite\'");
+            gameId = await getFortniteId(db);
         }
         await db.delete("locations",
             "WHERE locations.game_id in (\n" +
@@ -54,8 +53,15 @@ router.get('/fortnite', async function (req, res) {
     }
 });
 
+/**
+ * Get Route - /movies
+ * Generates data for movies.
+ * @param {Request} req Request sent by client
+ * @param {Response} res Response to be sent
+ * @return {String} Status message
+ */
 router.get('/movies', async function (req, res) {
-    const directoryPath = "../Database/Data";
+    const directoryPath = "../Database/Data/Movies";
     try {
         fs.readdir(directoryPath, (err, files) => {
             if (!err) {
@@ -84,13 +90,19 @@ router.get('/movies', async function (req, res) {
                 throw Error();
             }
         });
-
     } catch (error) {
         console.log(error)
         return res.sendStatus(500);
     }
 });
 
+/**
+ * Get Route - /tv_shows
+ * Generates data for tv shows.
+ * @param {Request} req Request sent by client
+ * @param {Response} res Response to be sent
+ * @return {String} Status message
+ */
 router.get('/tv_shows', async function (req, res) {
     const directoryPath = "../Database/Data/TV";
     try {
@@ -128,6 +140,21 @@ router.get('/tv_shows', async function (req, res) {
     }
 });
 
+/**
+ * Gets the id of the fortnite game
+ * @param {OracleDatabase} db Database
+ * @return {Promise<*>} Fortnite id
+ */
+async function getFortniteId(db) {
+    return db.select("games", [idAttribute],
+        [new WhereStatement(GAME_ATTRIBUTES.get('url'),"\'fortnite\'")], null);
+}
+
+/**
+ * Adds the fortnite location data
+ * @param {OracleDatabase} db Database
+ * @param {Number} gameId Id of fortnite
+ */
 async function addFortniteLocations(db, gameId) {
     const response = await axios.get("https://fortnite-api.com/v1/map");
     let attributeValuesList = [];
@@ -153,6 +180,9 @@ async function addFortniteLocations(db, gameId) {
         ], attributeValuesList, names)
 }
 
+/**
+ * Adds the fortnite map image.
+ */
 async function addFortniteMap() {
     const response = await axios.get(
         "https://fortnite-api.com/images/map_en.png",
@@ -162,64 +192,108 @@ async function addFortniteMap() {
     fs.writeFileSync(imagePath, response.data);
 }
 
-async function addCategory(db, file) {
-    await db.createTable("categories", categoryAttributes)
+/**
+ * Adds the category to the category table
+ * @param {OracleDatabase} db Database
+ * @param {String} category Category name
+ */
+async function addCategory(db, category) {
+    await db.createTable("categories", CATEGORY_ATTRIBUTES)
     let attributeValuesList = [
-        `\'${file}\'`, `\'${file.toLowerCase().replace(/\s/g, "")}\'`];
-    await db.insert("categories", categoryAttributes,
+        `\'${category}\'`, `\'${category.toLowerCase().replace(/\s/g, "")}\'`];
+    await db.insert("categories", CATEGORY_ATTRIBUTES,
         attributeValuesList)
 }
 
+/**
+ * Adds movies to the movie table
+ * @param {OracleDatabase} db Database
+ * @param {String} data Movie file data
+ */
 async function addMovies(db, data) {
-    await db.createTable("movies", movieAttributes);
+    await db.createTable("movies", MOVIE_ATTRIBUTES);
     let attributeValuesList = []
     data.split(/\r?\n/).forEach((movie) => {
         attributeValuesList.push(["'" + movie + "'"])
     })
-    await db.insertAll("movies", movieAttributes, attributeValuesList, {})
+    await db.insertAll("movies", MOVIE_ATTRIBUTES, attributeValuesList, {})
     return attributeValuesList;
 }
 
+/**
+ * Links movies to category
+ * @param {OracleDatabase} db Database
+ * @param {String} category Name of category to link movie to
+ * @param {Object[]} movies Movies to link to category
+ */
 async function addMoviesToCategory(db, category, movies) {
     let attributeValuesList = []
-    let category_id = await db.select("movie_categories", "id", "name",
-        `\'${category}\'`)
+    let category_id = await db.select("categories", [idAttribute],
+        [new WhereStatement(CATEGORY_ATTRIBUTES.get('name'),
+            `\'${category}\'`)], null)
     for (const movie of movies) {
-        attributeValuesList.push([
-            await db.select("movies", "id", "title", movie[0]), category_id]);
+        let movieId =  await db.select("movies", [idAttribute],
+            [new WhereStatement(MOVIE_ATTRIBUTES.get('title'), movie[0])],
+            null);
+        attributeValuesList.push([movieId, category_id]);
     }
-    await db.insertAll("movie_movie_category", movieCategoryAttributes,
+    await db.insertAll("movie_category", movieCategoryAttributes,
         attributeValuesList, {});
 }
 
+/**
+ * Adds tv shows to the tv show table
+ * @param {OracleDatabase} db Database
+ * @param {String} data TV show file data
+ */
 async function addTVShows(db, data) {
-    await db.createTable("tv_shows", tvShowAttributes);
+    await db.createTable("tv_shows", TV_SHOW_ATTRIBUTES);
+    let tvShowAttributes = new Map([
+        ['title', new Attribute("title", "VARCHAR(255)", true, true)],
+        ['season', new Attribute("season", "NUMBER", true, true)],
+        ['episode_number', new Attribute("episode_number", "NUMBER", true,
+            true)],
+        ['episode_name', new Attribute("episode_name", "VARCHAR(255)", true,
+            false)],
+    ]);
     let attributeValuesList = []
-    data.split(/\r?\n/).forEach((tvShow) => {
+    for (const tvShow of data.split(/\r?\n/)) {
         let tvShowData = tvShow.split(",");
+        try {
+            await db.insert("tv_shows", tvShowAttributes,
+                [`\'${tvShowData[0]}\'`, tvShowData[1], tvShowData[2],
+                    `\'${tvShowData[3]}\'`], {});
+        } catch (Error) {}
         attributeValuesList.push([`\'${tvShowData[0]}\'`, tvShowData[1],
             tvShowData[2], `\'${tvShowData[3]}\'`])
-    })
-    await db.insertAll("tv_shows", tvShowAttributes, attributeValuesList, {})
+    }
     return attributeValuesList;
 }
 
+/**
+ * Links TV shows to category
+ * @param {OracleDatabase} db Database
+ * @param {String} category Name of category to link movie to
+ * @param {Object[]} tv_shows TV shows to link to category
+ */
 async function addTVShowsToCategory(db, category, tv_shows) {
     let whereStatements = [
-        new WhereStatement(tvShowAttributes[0], ""),
-        new WhereStatement(tvShowAttributes[1], ""),
-        new WhereStatement(tvShowAttributes[2], "")
+        new WhereStatement(TV_SHOW_ATTRIBUTES.get('title'), ""),
+        new WhereStatement(TV_SHOW_ATTRIBUTES.get('season'), ""),
+        new WhereStatement(TV_SHOW_ATTRIBUTES.get('episode_number'), "")
     ];
     let attributeValuesList = []
-    let categoryWhere = new WhereStatement(categoryAttributes[0],
+    let categoryWhere = new WhereStatement(CATEGORY_ATTRIBUTES.get('name'),
         `\'${category}\'`);
-    let category_id = await db.select("categories", "id", [categoryWhere])
+    let category_id = await db.select("categories", [idAttribute],
+        [categoryWhere], null)
     for (const tv_show of tv_shows) {
         whereStatements[0].value = tv_show[0];
         whereStatements[1].value = tv_show[1];
         whereStatements[2].value = tv_show[2];
-        attributeValuesList.push([
-            await db.select("tv_shows", "id", whereStatements), category_id]);
+        let tvShowId =  await db.select("tv_shows", [idAttribute],
+            whereStatements, null);
+        attributeValuesList.push([tvShowId, category_id]);
     }
     await db.insertAll("tv_show_category", tvShowCategoryAttributes,
         attributeValuesList, {});
